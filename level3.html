@@ -1,0 +1,387 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niveau 3 - Jeu de Mémoire</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #timer {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(6, 90px);
+      gap: 15px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+    .card {
+  width: 100px;
+  height: 140px;
+  perspective: 1000px; 
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.card.revealed .card-inner {
+  transform: rotateY(180deg); 
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden; /* إخفاء الجهة الخلفية عند دوران البطاقة */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.card-back {
+  background-image: url('back.jpg');
+  background-size: cover;
+  color: white;
+}
+
+.card-front {
+  background-color: #3498db;
+  color: white;
+  transform: rotateY(180deg); /* قلب الجهة الأمامية */
+}
+
+.card.matched .card-front {
+  background-color: #2ecc71 !important;
+}
+
+    
+
+    .overlay, .pause-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      z-index: 10;
+    }
+    .overlay button, .pause-overlay button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .navigation {
+      display: none;
+      margin-top: 30px;
+    }
+    .navigation button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    .next-level { background-color: #2ecc71; color: white; }
+    .home { background-color: #e74c3c; color: white; }
+    #pauseBtn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #pauseBtn:hover{
+      background-color: #d4870a;
+    }    
+
+    #restartBtn{
+      margin-top: 10px; 
+      padding: 8px 16px; 
+      font-size: 16px; 
+      background-color: #3498db; 
+      color: white; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #restartBtn:hover{
+      background-color: #2980b9;
+
+    }
+
+    .restart{
+      background-color: #3498db;
+      color: white;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .restart:hover{
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Niveau 3</h1>
+  <div id="timer">Temps restant : 150s</div>
+
+  <button id="pauseBtn">Pause</button>
+  <button id="restartBtn">Réessayer</button>
+
+  <div class="board" id="board"></div>
+  <div class="navigation" id="navigation">
+    <button class="next-level" onclick="location.href='level4.html'">aller au dernier niveau</button>
+    <button class="restart" onclick="restartGame()">Réessayer</button>
+    <button class="home" onclick="location.href='index.html'">page principal</button>
+  </div>
+  <div class="overlay" id="loseOverlay">
+    <p>Temps écoulé ! Vous avez perdu !</p>
+    <button onclick="restartGame()">Réessayer</button>
+    <button onclick="location.href='index.html'">page principal</button>
+  </div>
+  <div class="pause-overlay" id="pauseOverlay">
+    <p>Jeu en pause</p>
+    <button onclick="togglePause()">continue</button>
+    <button onclick="location.href='index.html'">page principal</button>
+  </div>
+  
+  <div class="overlay" id="winOverlay">
+  <video id="winVideo" width="640" height="360" autoplay muted playsinline>
+    <source src="victory.mp4" type="video/mp4">
+    Votre navigateur ne supporte pas la lecture de vidéos.
+  </video>
+  <div class="navigation" id="winNavigation" style="display: none;">
+    <button class="next-level" onclick="location.href='level4.html'">aller au dernier niveau</button>
+    <button class="restart" onclick="restartGame()">Réessayer</button>
+    <button class="home" onclick="location.href='index.html'">page principal</button>
+  </div>
+</div>
+
+
+  <script>
+    const board = document.getElementById('board');
+    const navigation = document.getElementById('navigation');
+    const timerDisplay = document.getElementById('timer');
+    const loseOverlay = document.getElementById('loseOverlay');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const pauseBtn = document.getElementById('pauseBtn');
+
+    const cardsData = [
+      { text: 'let', pair: 'Déclare une variable modifiable' },
+      { text: 'Déclare une variable modifiable', pair: 'let' },
+      { text: 'const', pair: 'Déclare une constante' },
+      { text: 'Déclare une constante', pair: 'const' },
+      { text: 'function', pair: 'Déclare une fonction' },
+      { text: 'Déclare une fonction', pair: 'function' },
+      { text: 'if', pair: 'Conditionnel le' },
+      { text: 'Conditionnelle', pair: 'if' },
+      { text: 'for', pair: 'Boucle avec compteur' },
+      { text: 'Boucle avec compteur', pair: 'for' },
+      { text: 'while', pair: 'Boucle tant que vraie' },
+      { text: 'Boucle tant que vraie', pair: 'while' },
+      { text: 'console.log()', pair: 'Affiche dans la console' },
+      { text: 'Affiche dans la console', pair: 'console.log()' },
+      { text: '==', pair: 'Compare sans type' },
+      { text: 'Compare sans type', pair: '==' },
+      { text: '===', pair: 'Compare avec type' },
+      { text: 'Compare avec type', pair: '===' },
+      { text: 'document.get ElementById', pair: 'Sélectionne un élément HTML' },
+      { text: 'Sélectionne un élément HTML', pair: 'document.get ElementById' },
+      { text: 'add EventListener', pair: 'Ajoute un écouteur dévénement' },
+      { text: 'Ajoute un écouteur dévénement', pair: 'add EventListener' },
+      { text: 'return', pair: 'Retourne une valeur' },
+      { text: 'Retourne une valeur', pair: 'return' }
+    ];
+
+    let selected = [];
+    let matchedCount = 0;
+    let timer = 150;
+    let timerInterval;
+    let isPaused = false;
+
+    const matchSound = new Audio('sons/match.mp3'); // Placer ici le son de match
+    const winSound = new Audio('sons/win.mp3');     // Placer ici le son de victoire
+    const loseSound = new Audio('sons/lose.mp3');   // Placer ici le son de défaite
+    
+    // احصل على الزر الجديد
+    const restartBtn = document.getElementById('restartBtn');
+
+    // أضف مستمع الأحداث
+    restartBtn.addEventListener('click', restartGame);
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function updateTimer() {
+      if (!isPaused) {
+        timer--;
+        timerDisplay.innerText = `Temps restant : ${timer}s`;
+        if (timer <= 0) {
+          clearInterval(timerInterval);
+          loseSound.play();
+          loseOverlay.style.display = 'flex';
+        }
+      }
+    }
+
+    function renderBoard() {
+  const shuffled = shuffle(cardsData);
+  board.innerHTML = '';
+  shuffled.forEach(data => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.text = data.text;
+    card.dataset.pair = data.pair;
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    const front = document.createElement('div');
+    front.className = 'card-front';
+    front.innerText = data.text; // النص على الجهة الأمامية
+
+    const back = document.createElement('div');
+    back.className = 'card-back';
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
+
+    card.onclick = () => {
+      if (!isPaused && selected.length < 2 && !card.classList.contains('matched') && !card.classList.contains('revealed')) {
+        card.classList.add('revealed');
+        selected.push({ card, data });
+
+        if (selected.length === 2) {
+          const [first, second] = selected;
+          if (first.data.pair === second.data.text || second.data.pair === first.data.text) {
+            matchSound.play();
+            first.card.classList.add('matched');
+            second.card.classList.add('matched');
+            matchedCount += 2;
+            selected = [];
+
+            if (matchedCount === cardsData.length) {
+              clearInterval(timerInterval);
+              setTimeout(() => {
+                winSound.play();
+                document.getElementById('winOverlay').style.display = 'flex';
+                winVideo.play();
+              }, 300);
+            }
+          } else {
+            setTimeout(() => {
+              first.card.classList.remove('revealed');
+              second.card.classList.remove('revealed');
+              selected = [];
+            }, 1000);
+          }
+        }
+      }
+    };
+
+    board.appendChild(card);
+  });
+}
+
+function restartGame() {
+  
+  matchedCount = 0;
+  selected = [];
+  timer = 150;
+  isPaused = false;
+  
+  
+  // إخفاء جميع النوافذ المنبثقة
+  loseOverlay.style.display = 'none';
+  pauseOverlay.style.display = 'none';
+  winOverlay.style.display = 'none';
+
+  // restart video
+  winVideo.pause();
+  winVideo.currentTime = 0;
+  winVideo.style.display = 'block';
+  winNavigation.style.display = 'none';
+  
+  // إعادة تشغيل العداد
+  timerDisplay.innerText = `Temps restant : ${timer}s`;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+  
+  // إعادة توليد البطاقات
+  renderBoard();
+  
+  // إعادة تشغيل الفيديو إذا كان متوقفاً
+  winVideo.currentTime = 0;
+  winVideo.style.display = 'block';
+  winNavigation.style.display = 'none';
+}
+
+    function togglePause() {
+      isPaused = !isPaused;
+      pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+    }
+
+    pauseBtn.addEventListener('click', togglePause);
+
+    renderBoard();
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    const winOverlay = document.getElementById('winOverlay');
+const winVideo = document.getElementById('winVideo');
+const winNavigation = document.getElementById('winNavigation');
+
+winVideo.addEventListener('ended', () => {
+  winVideo.style.display = 'none';
+  winNavigation.style.display = 'flex';
+});
+
+  </script>
+</body>
+</html>
+

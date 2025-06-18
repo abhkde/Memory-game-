@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niveau 1 - Jeu de Mémoire</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #e8f0fe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 120px);
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100px;
+      height: 140px;
+      perspective: 1000px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.revealed .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .card-back {
+      background-image: url('back.jpg');
+      background-size: cover;
+      color: white;
+    }
+
+    .card-front {
+      background-color: #4a90e2;
+      color: white;
+      transform: rotateY(180deg);
+    }
+
+    .matched .card-front {
+      background-color:#4CAF50 !important;
+    }
+
+    .navigation {
+      display: none;
+      margin-top: 30px;
+      gap: 20px;
+    }
+
+    .navigation button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .next-level {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .home {
+      background-color: #f44336;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Niveau 1</h1>
+  <div class="board" id="board"></div>
+  <div class="navigation" id="navigation">
+    <button class="next-level" onclick="location.href='level2.html'">Passer au Niveau 2</button>
+    <button class="home" onclick="location.href='index.html'">Retour à l'accueil</button>
+  </div>
+
+  <script>
+    const board = document.getElementById('board');
+    const navigation = document.getElementById('navigation');
+
+    const cardsData = [
+      { text: 'var', pair: 'Déclare une variable' },
+      { text: 'Déclare une variable', pair: 'var' },
+      { text: 'function', pair: 'Déclare une fonction' },
+      { text: 'Déclare une fonction', pair: 'function' },
+      { text: 'if', pair: 'Condition' },
+      { text: 'Condition', pair: 'if' },
+      { text: 'for', pair: 'Boucle' },
+      { text: 'Boucle', pair: 'for' }
+    ];
+
+    let selected = [];
+    let matchedCount = 0;
+
+    const matchSound = new Audio('sons/match.mp3');
+    const winSound = new Audio('sons/win.mp3');
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function renderBoard() {
+      const shuffled = shuffle(cardsData);
+      board.innerHTML = '';
+      shuffled.forEach(data => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.text = data.text;
+        card.dataset.pair = data.pair;
+
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card-inner';
+
+        const front = document.createElement('div');
+        front.className = 'card-front';
+        front.innerText = data.text;
+
+        const back = document.createElement('div');
+        back.className = 'card-back';
+
+        cardInner.appendChild(front);
+        cardInner.appendChild(back);
+        card.appendChild(cardInner);
+
+        card.onclick = () => {
+          if (selected.length < 2 && !card.classList.contains('matched') && !card.classList.contains('revealed')) {
+            card.classList.add('revealed');
+            selected.push({ card, data });
+
+            if (selected.length === 2) {
+              const [first, second] = selected;
+              if (first.data.pair === second.data.text || second.data.pair === first.data.text) {
+                matchSound.play();
+                first.card.classList.add('matched');
+                second.card.classList.add('matched');
+                matchedCount += 2;
+                selected = [];
+
+                if (matchedCount === cardsData.length) {
+                  setTimeout(() => {
+                    winSound.play();
+                    alert("Bravo ! Vous avez gagné le niveau 1 !");
+                    navigation.style.display = 'flex';
+                  }, 300);
+                }
+              } else {
+                setTimeout(() => {
+                  first.card.classList.remove('revealed');
+                  second.card.classList.remove('revealed');
+                  selected = [];
+                }, 1000);
+              }
+            }
+          }
+        };
+
+        board.appendChild(card);
+      });
+    }
+
+    renderBoard();
+  </script>
+</body>
+
+</html>
+

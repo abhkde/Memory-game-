@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niveau 4</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #665d5d;
+      color: rgb(0, 0, 0);
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+      width: 60%;
+      margin: 10px auto;
+    }
+
+    .card {
+      width: 100px;
+      height: 140px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .card-front {
+      background-image: url('last.jpg');
+      background-size: cover;
+    }
+
+    .card-back {
+      background-color: #333;
+      color: white;
+      transform: rotateY(180deg);
+      font-weight: bold;
+    }
+
+    .card.matched .card-inner {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0% {transform: translateX(0);}
+      25% {transform: translateX(-5px);}
+      50% {transform: translateX(5px);}
+      75% {transform: translateX(-5px);}
+      100% {transform: translateX(0);}
+    }
+
+    .card.matched .card-back {
+      background-color: #4caf50 !important;
+    }
+
+    #timer, #attempts {
+      font-size: 20px;
+      margin-top: 15px;
+    }
+
+    #controls, #pause-menu, #end-buttons {
+      margin-top: 15px;
+      display: none;
+    }
+
+    .btn {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 500;
+      color: white;
+      font-size: 24px;
+      flex-direction: column;
+     /* pointer-events: none;*/
+    }
+
+    #overlay #end-buttons{
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #overlay #end-buttons .btn{
+      margin: 10px;
+    }
+
+    #pause-menu {
+      font-size: 30px;
+      z-index: 1000;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    #win-video-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      flex-direction: column;
+    }
+
+    #win-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #333;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 2001;
+    }
+    #overlay-message{
+      z-index: 1500;
+    }
+
+    button:disabled{
+      cursor: default;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Niveau 4 : Niveau finale</h1>
+  <button class="btn" onclick="toggleMusic()">active/desactive msc</button>
+  <div id="timer">Temps restant : 240s</div>
+  <div id="attempts">Tentatives restantes : <span id="attemptCount">70</span></div>
+
+  <div id="controls">
+    <button class="btn" onclick="restartGame()">Réessayer</button>
+    <button class="btn" onclick="togglePause()">Pause</button>
+  </div>
+
+  <div id="pause-menu">
+    <p style="color: white;">Jeu en pause</p>
+    <button class="btn" onclick="resumeGame()"><b>continue</b></button><br><br>
+    <button class="btn" onclick="window.location.href='index.html'"><b>Page principale</b></button>
+  </div>
+
+  <div id="game-board"></div>
+
+  
+
+  <div id="overlay">
+    <p id="overlay-message"></p>
+    <div id="end-buttons">
+      <button class="btn" onclick="restartGame()">Réessayer</button>
+      <button class="btn" onclick="window.location.href='index.html'">Page principale</button>
+    </div>
+  </div>
+
+  <audio id="matchSound" src="sons/match.mp3"></audio>
+  <audio id="winSound" src="sons/win.mp3"></audio>
+  <audio id="loseSound" src="sons/lose.mp3"></audio>
+  <audio id="backgroundMusic" src="sons/lastbgm.mp3" autoplay loop></audio>
+
+  <div id="win-video-container">
+    <video id="win-video" width="600" autoplay muted style="border-radius: 10px;">
+      <source src="victory.mp4" type="video/mp4">
+      Votre navigateur ne supporte pas la vidéo.
+    </video>
+  </div>
+
+  <div id="win-message">
+    <p style="font-size: 24px; color: white;">Félicitations, vous avez gagné le jeu, vous êtes vraiment intelligent !</p>
+    
+    <button class="btn" onclick="restartGame()">Réessayer</button>
+
+    <button class="btn" onclick="window.location.href='index.html'">Page principale</button>
+  </div>
+
+  <script>
+    const cards = [
+      ['for', 'Boucle for'],
+      ['while', 'Boucle while'], 
+      ['if', 'Condition'], 
+      ['else', 'Sinon'],
+      ['function()', ' Crée un Fonction'], 
+      ['=>', 'Fonction fléchée'], 
+      ['let', 'Déclaration let'], 
+      ['const', 'Déclaration constante'],
+      ['var', 'Déclaration var'], 
+      ['return', 'Retourner'], 
+      ['array.push()', 'Ajouter à tableau'], 
+      ['array.pop()', 'Retirer du tableau'],
+      ['==', 'Égalité'], 
+      ['===', 'Égalité stricte'], 
+      ['!=', 'Différent'], 
+      ['!==', 'Différent strict']
+    ];
+
+    let selected = [];
+    let matched = 0;
+    let timeLeft = 240;
+    let attempts = 70;
+    let timer;
+    
+
+    const matchSound = document.getElementById("matchSound");
+    const winSound = document.getElementById("winSound");
+    const loseSound = document.getElementById("loseSound");
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startGame() {
+      /*__________________*/
+       paused = false;
+       gameLost = false;
+       document.getElementById('overlay').style.display = 'none';
+       document.getElementById('overlay-message').innerText = '';
+      /*__________________*/
+      const gameBoard = document.getElementById('game-board');
+      const deck = shuffle(cards.flatMap(([code, definition]) => [
+        {text: code, value: definition},
+        {text: definition, value: definition},
+      ]));
+
+      gameBoard.innerHTML = '';
+      matched = 0;
+      timeLeft = 240;
+      attempts = 70;
+      document.getElementById('attemptCount').innerText = attempts;
+      document.getElementById('timer').innerText = `Temps restant : ${timeLeft}s`;
+      document.getElementById('controls').style.display = 'block';
+      document.getElementById('end-buttons').style.display = 'none';
+
+      deck.forEach(cardData => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.value = cardData.value;
+
+        const inner = document.createElement('div');
+        inner.className = 'card-inner';
+
+        const front = document.createElement('div');
+        front.className = 'card-front';
+
+        const back = document.createElement('div');
+        back.className = 'card-back';
+        back.textContent = cardData.text;
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        card.appendChild(inner);
+
+        card.addEventListener('click', flipCard);
+        gameBoard.appendChild(card);
+      });
+
+      clearInterval(timer);
+      timer = setInterval(updateTimer, 1000);
+
+      const backgroundMusic = document.getElementById("backgroundMusic");
+      backgroundMusic.play().catch(() => {
+        document.addEventListener("click", () => {
+          backgroundMusic.play();
+        }, { once: true });
+      });
+    }
+
+    function flipCard(e) {
+      if (paused) return;
+      const card = e.currentTarget;
+      if (card.classList.contains('flipped') || selected.length === 2) return;
+      card.classList.add('flipped');
+      selected.push(card);
+
+      if (selected.length === 2) {
+        attempts--;
+        document.getElementById('attemptCount').innerText = attempts;
+
+        if (selected[0].dataset.value === selected[1].dataset.value) {
+          matchSound.play();
+          matched++;
+          selected[0].classList.add('matched');
+          selected[1].classList.add('matched');
+
+          setTimeout(() => {
+            selected[0].classList.remove('matched');
+            selected[1].classList.remove('matched');
+          }, 500);
+
+          selected = [];
+
+          if (matched === cards.length) {
+            clearInterval(timer);
+            winSound.play();
+            showWinVideo();
+          }
+        } else {
+          setTimeout(() => {
+            selected.forEach(c => c.classList.remove('flipped'));
+            selected = [];
+          }, 1000);
+        }
+
+        if (attempts <= 0) {
+          clearInterval(timer);
+          loseSound.play();
+          showOverlay("Plus de tentatives. Vous avez perdu.");
+          document.getElementById('end-buttons').style.display = 'block';
+          document.querySelectorAll('.card').forEach(card => card.style.pointerEvents = 'none');
+        }
+      }
+    }
+
+    function toggleMusic() {
+      const bgMusic = document.getElementById("backgroundMusic");
+      if (bgMusic.paused) bgMusic.play();
+      else bgMusic.pause();
+    }
+
+    function updateTimer() {
+      if (paused) return;
+      timeLeft--;
+      document.getElementById('timer').innerText = `Temps restant : ${timeLeft}s`;
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        loseSound.play();
+        showOverlay("Temps écoulé ! Vous avez perdu.");
+        document.getElementById('end-buttons').style.display = 'block';
+        document.querySelectorAll('.card').forEach(card => card.style.pointerEvents = 'none');
+      }
+    }
+    
+    function restartGame() {
+      gameLost = false;
+      paused = false;
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('win-message').style.display = 'none';
+      document.getElementById('win-video-container').style.display = 'none';
+      document.getElementById('pause-menu').style.display = 'none';
+      document.getElementById('end-buttons').style.display = 'none';
+
+      document.getElementById('overlay-message').innerText = '';
+      
+      document.querySelectorAll('button').forEach(btn => {
+        btn.disabled = false;
+      });
+
+      selected = [];
+      matched = 0 ;
+      timeLeft = 240;
+      attempts = 70;
+
+      startGame();
+    }
+
+    function togglePause() {
+      if (paused || gameLost) return;
+      paused = true;
+
+      document.getElementById('pause-menu').style.display = 'block';
+      document.getElementById('overlay').style.display = 'flex';
+      document.getElementById('overlay-message').innerText = '';
+      document.querySelectorAll('.card').forEach(card => card.style.pointerEvents = 'none');
+      document.querySelectorAll('button').forEach(btn => {
+        if (!btn.closest('#pause-menu')) {
+          btn.disabled = true;
+        }
+      });
+    }
+
+    function resumeGame() {
+      paused = false;
+      document.getElementById('pause-menu').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+      document.querySelectorAll('.card').forEach(card => card.style.pointerEvents = 'auto');
+
+      document.querySelectorAll('button').forEach(btn => {
+        btn.disabled = false;
+      });
+    }
+
+    let gameLost = false;
+    let paused = false;
+    function showOverlay(message) {
+      if (gameLost) return;
+      const overlay = document.getElementById('overlay');
+
+      document.getElementById('overlay-message').innerText = message;
+
+      document.getElementById('pause-menu').style.display = 'none';
+
+      overlay.style.display = 'flex';
+
+      document.querySelectorAll('button').forEach(btn => {
+        btn.disabled = true;
+      });
+      
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+      });
+
+      document.querySelectorAll('#end-buttons button').forEach(btn => {
+        btn.disabled = false;
+      });
+
+      gameLost = true;
+    }
+
+    function showWinVideo() {
+      const videoContainer = document.getElementById('win-video-container');
+      const video = document.getElementById('win-video');
+      const message = document.getElementById('win-message');
+      videoContainer.style.display = 'flex';
+      video.play();
+      document.querySelectorAll('button').forEach(btn => {
+        btn.disabled = true;
+      });
+      
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+      });
+
+      video.onended = () => {
+        videoContainer.style.display = 'none';
+        message.style.display = 'block';
+
+        const homeBtn = message.querySelector('button');
+          if (homeBtn) homeBtn.disabled = false; 
+      };
+      message.querySelectorAll('button').forEach(btn => {
+        btn.disabled = false;
+      });
+    }
+
+    window.onload = startGame;
+  </script>
+</body>
+</html>

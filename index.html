@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeu de Mémoire - Accueil</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #c6d0d47e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bienvenue dans le Jeu de Mémoire</h1>
+    <label for="levelSelect">Choisissez un niveau :</label><br>
+    <select id="levelSelect">
+      <option value="level1.html">Niveau 1 - Facile</option>
+      <option value="level2.html">Niveau 2 - Moyen</option>
+      <option value="level3.html">Niveau 3 - Difficile</option>
+      <option value="level4.html">Niveau 4 - Expert</option>
+    </select><br>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <script>
+    function startGame() {
+      const selectedLevel = document.getElementById("levelSelect").value;
+      window.location.href = selectedLevel;
+    }
+  </script>
+</body>
+</html>
